@@ -20,6 +20,12 @@ def is_travis_pr():
             (os.environ.get('TRAVIS_EVENT_TYPE') == 'pull_request'))
 
 
+def get_travis_pr_commit_range():
+    if 'TRAVIS_COMMIT_RANGE' not in os.environ:
+        raise EnvironmentError('TRAVIS_COMMIT_RANGE not found')
+    return os.environ.get('TRAVIS_COMMIT_RANGE')
+
+
 def get_travis_pr_base_branch():
     if 'TRAVIS_BRANCH' not in os.environ:
         raise EnvironmentError('TRAVIS_BRANCH not found')
@@ -43,15 +49,15 @@ def unshallow_git_if_shallow():
         subprocess.check_call(['git', 'fetch', '--unshallow'])
 
 
-def git_diff(base, request):
-    return subprocess.check_output(['git', 'diff', base, request])
+def git_diff(commit_range):
+    return subprocess.check_output(['git', 'diff', commit_range])
 
 
 def main(argv):
     unshallow_git_if_shallow()
     if is_travis():
         if is_travis_pr():
-            print git_diff(get_travis_pr_base_branch(), get_travis_pr_request_branch())
+            print git_diff(get_travis_pr_commit_range())
         elif is_travis_push():
             print 'PUSH'
     print 'Done.'
