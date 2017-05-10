@@ -18,6 +18,7 @@ def unshallow_git_if_shallow():
 
 def main(argv):
     unshallow_git_if_shallow()
+    subprocess.check_call(['printenv'])
     print 'Done.'
 
 
