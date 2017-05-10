@@ -9,3 +9,4 @@ branches:
   only:
   - gh-pages  # Need to enable gh-pages explicitly.
   - /(.*)/
+sudo: false  # Use container-based infrastructure for faster builds.
