@@ -5,3 +5,7 @@ install:
   - pip install pyyaml
 script:
   - ./check_packages.py
+branches:
+  only:
+  - gh-pages  # Need to enable gh-pages explicitly.
+  - /(.*)/
