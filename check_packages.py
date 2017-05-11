@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import json
 import os
 import re
 import subprocess
 import sys
+import urllib
 import yaml
 
 
@@ -49,6 +51,11 @@ def get_travis_pr_number():
     if os.environ.get('TRAVIS_PULL_REQUEST') == 'false':
         raise EnvironmentError('TRAVIS_PULL_REQUEST is false')
     return int(os.environ.get('TRAVIS_PULL_REQUEST'))
+
+
+def get_pr_author(pr_number):
+    with urllib.request.urlopen('https://api.github.com/repos/microost/microost.org/pulls/%d' % pr_number) as response:
+        return json.loads(response.read().decode("utf-8"))['user']['login']
 
 
 def git_dir():
@@ -114,7 +121,30 @@ def check_all_packages_valid():
     return True
 
 
-def check_package_changes_authorized(filenames):
+def check_package_changes_authorized(filenames, pr_author, privileged_users):
+    if pr_author in privileged_users:
+        print '%s is a privileged user.' % pr_author
+        return True
+
+    packages = []
+    for filename in filenames:
+        if filename.startswith('package/'):
+            packages.append(filename)
+
+    if len(packages) == 0:
+        print 'No package is changed.'
+        return True
+
+    if len(packages) > 1:
+        print 'Multiple packages are changed at the same time.'
+        return False
+    if len(filenames) > 1:
+        print 'A package and other file(s) are changed at the same time.'
+        return False
+
+    # TODO: Get package data at the base branch, and check the owners.
+
+    print 'Only one package is changed appropriately.'
     return True
 
 
@@ -128,7 +158,7 @@ def main(argv):
             print 'Changed files in the pull request #%d:' % pr_number
             for filename in filenames:
                 print filename
-            assert(check_package_changes_authorized(filenames))
+            assert(check_package_changes_authorized(filenames, get_pr_author(pr_number), []))
         elif is_travis_push():
             print 'The build is not based on pull request.'
 
