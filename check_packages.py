@@ -78,7 +78,7 @@ def unshallow_git_if_shallow():
 
 def git_diff_filenames(commit_range):
     filenames = subprocess.check_output(['git', 'diff', '--name-only', commit_range])
-    return [filename.strip() for filename in filenames.split('\n')]
+    return [filename.strip() for filename in filenames.split('\n') if len(filename.strip()) > 0]
 
 
 def get_file_contents_on_revision(revision, relative_path):
