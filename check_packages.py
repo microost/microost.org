@@ -81,6 +81,11 @@ def git_diff_filenames(commit_range):
     return [filename.strip() for filename in filenames.split('\n')]
 
 
+def get_file_contents_on_revision(revision, relative_path):
+    contents = subprocess.check_output(['git', 'show', '%s:%s' % (revision, relative_path)])
+    return contents
+
+
 def get_package_name_from_path(path):
     root, ext = os.path.splitext(os.path.basename(path))
     return root if (os.path.isfile(path) and ext == '.yml' and PACKAGE_PATTERN.match(root)) else None
@@ -123,7 +128,7 @@ def check_all_packages_valid():
     return True
 
 
-def check_package_changes_authorized(filenames, pr_author, privileged_users):
+def check_package_changes_authorized(filenames, pr_author, pr_base_branch, privileged_users):
     if pr_author in privileged_users:
         print '%s is a privileged user.' % pr_author
         return True
@@ -144,10 +149,13 @@ def check_package_changes_authorized(filenames, pr_author, privileged_users):
         print 'A package and other file(s) are changed at the same time.'
         return False
 
-    # TODO: Get package data at the base branch, and check the owners.
+    base_package_data = yaml.load(get_file_contents_on_revision(pr_base_branch, packages[0]))
+    if pr_author in base_package_data['owners']:
+        print 'Only one package is changed by an owner.'
+        return True
 
-    print 'Only one package is changed appropriately.'
-    return True
+    print 'Only one package is changed, but by a non-owner.'
+    return False
 
 
 def main(argv):
@@ -160,7 +168,8 @@ def main(argv):
             print 'Changed files in the pull request #%d:' % pr_number
             for filename in filenames:
                 print filename
-            assert(check_package_changes_authorized(filenames, get_pr_author(pr_number), []))
+            assert(check_package_changes_authorized(
+                filenames, get_pr_author(pr_number), get_travis_pr_base_branch(), []))
         elif is_travis_push():
             print 'The build is not based on pull request.'
 
