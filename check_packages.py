@@ -54,8 +54,10 @@ def get_travis_pr_number():
 
 
 def get_pr_author(pr_number):
-    with urllib2.urlopen('https://api.github.com/repos/microost/microost.org/pulls/%d' % pr_number) as response:
-        return json.loads(response.read().decode("utf-8"))['user']['login']
+    connection = urllib2.urlopen('https://api.github.com/repos/microost/microost.org/pulls/%d' % pr_number)
+    pr_author = json.loads(connection.read().decode("utf-8"))['user']['login']
+    connection.close()
+    return pr_author
 
 
 def git_dir():
