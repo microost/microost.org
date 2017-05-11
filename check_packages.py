@@ -43,6 +43,14 @@ def get_travis_pr_request_branch():
     return os.environ.get('TRAVIS_PULL_REQUEST_BRANCH')
 
 
+def get_travis_pr_number():
+    if 'TRAVIS_PULL_REQUEST' not in os.environ:
+        raise EnvironmentError('TRAVIS_PULL_REQUEST not found')
+    if os.environ.get('TRAVIS_PULL_REQUEST') == 'false':
+        raise EnvironmentError('TRAVIS_PULL_REQUEST is false')
+    return int(os.environ.get('TRAVIS_PULL_REQUEST'))
+
+
 def git_dir():
     path = subprocess.check_output(['git', 'rev-parse', '--git-dir']).strip()
     return os.path.abspath(path)
@@ -59,8 +67,9 @@ def unshallow_git_if_shallow():
         subprocess.check_call(['git', 'fetch', '--unshallow'])
 
 
-def git_diff(commit_range):
-    return subprocess.check_output(['git', 'diff', commit_range])
+def git_diff_filenames(commit_range):
+    filenames = subprocess.check_output(['git', 'diff', '--name-only', commit_range])
+    return [filename.strip() for filename in filenames.split('\n')]
 
 
 def get_package_name_from_path(path):
@@ -77,8 +86,8 @@ def check_package_data(data):
     return (('url' in data) and
             isinstance(data['url'], str) and
             # TODO: Confirm valid URL.
-            ('authors' in data) and
-            isinstance(data['authors'], list))
+            ('owners' in data) and
+            isinstance(data['owners'], list))
 
 
 def check_all_packages_valid():
@@ -105,15 +114,23 @@ def check_all_packages_valid():
     return True
 
 
+def check_package_changes_authorized(filenames):
+    return True
+
+
 def main(argv):
     assert(check_all_packages_valid())
-
     unshallow_git_if_shallow()
     if is_travis():
         if is_travis_pr():
-            print git_diff(get_travis_pr_commit_range())
+            filenames = git_diff_filenames(get_travis_pr_commit_range())
+            pr_number = get_travis_pr_number()
+            print 'Changed files in the pull request #' + pr_number + ' :'
+            for filename in filenames:
+                print filename
+            assert(check_package_changes_authorized(filenames))
         elif is_travis_push():
-            print '(The build is based on push.)'
+            print 'The build is not based on pull request.'
 
     print 'Done.'
 
