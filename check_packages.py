@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 import sys
-import urllib.request
+import urllib2
 import yaml
 
 
@@ -54,7 +54,7 @@ def get_travis_pr_number():
 
 
 def get_pr_author(pr_number):
-    with urllib.request.urlopen('https://api.github.com/repos/microost/microost.org/pulls/%d' % pr_number) as response:
+    with urllib2.urlopen('https://api.github.com/repos/microost/microost.org/pulls/%d' % pr_number) as response:
         return json.loads(response.read().decode("utf-8"))['user']['login']
 
 
