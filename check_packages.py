@@ -125,7 +125,7 @@ def main(argv):
         if is_travis_pr():
             filenames = git_diff_filenames(get_travis_pr_commit_range())
             pr_number = get_travis_pr_number()
-            print 'Changed files in the pull request #' + pr_number + ' :'
+            print 'Changed files in the pull request #%d:' % pr_number
             for filename in filenames:
                 print filename
             assert(check_package_changes_authorized(filenames))
