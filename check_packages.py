@@ -82,8 +82,13 @@ def git_diff_filenames(commit_range):
 
 
 def get_file_contents_on_revision(revision, relative_path):
-    contents = subprocess.check_output(['git', 'show', '%s:%s' % (revision, relative_path)])
-    return contents
+    process = subprocess.Popen(['git', 'show', '%s:%s' % (revision, relative_path)],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    stdout_data, stderr_data = process.communicate()
+    if stderr_data.startswith('fatal'):
+        return None
+    return stdout_data
 
 
 def get_package_name_from_path(path):
@@ -149,7 +154,12 @@ def check_package_changes_authorized(filenames, pr_author, pr_base_branch, privi
         print 'A package and other file(s) are changed at the same time.'
         return False
 
-    base_package_data = yaml.load(get_file_contents_on_revision(pr_base_branch, packages[0]))
+    base_package_data_str = get_file_contents_on_revision(pr_base_branch, packages[0])
+    if not base_package_data_str:
+        print 'Only one new package is added.'
+        return True
+
+    base_package_data = yaml.load()
     if pr_author in base_package_data['owners']:
         print 'Only one package is changed by an owner.'
         return True
