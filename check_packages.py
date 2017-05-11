@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 import sys
-import urllib
+import urllib.request
 import yaml
 
 
