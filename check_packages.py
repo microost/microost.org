@@ -130,7 +130,7 @@ def check_package_changes_authorized(filenames, pr_author, privileged_users):
 
     packages = []
     for filename in filenames:
-        if filename.startswith('package/'):
+        if filename.startswith('packages/'):
             packages.append(filename)
 
     if len(packages) == 0:
